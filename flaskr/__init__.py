@@ -14,6 +14,7 @@ from os import environ
 def create_app(test_config=None):
     # Create and config the app
     app = Flask(__name__, instance_relative_config=True)
+    cors = CORS(app, resources={r"*": {"origins": "*"}})
     app.config.from_mapping(
         SECRET_KEY='dev',
     )
