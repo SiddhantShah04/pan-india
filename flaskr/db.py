@@ -8,14 +8,13 @@ import MySQLdb.cursors
 # It is used to store data that might be accessed by multiple functions during the request.
 from flask import current_app, g
 from flask.cli import with_appcontext
-from os import environ
 
 
 def get_db():
     if('db' not in g):
         # current_app is another special object that points to the Flask application handling the request.
-        g.db = MySQLdb.connect(database=environ.get("DATABASE"), user=environ.get("DATABASE_USER_NAME"), password=environ.get("DATABASE_USER_PASSWORD"),
-                               host=environ.get("DATABASE_HOST"), cursorclass=MySQLdb.cursors.DictCursor)
+        g.db = MySQLdb.connect(database="printpanindia", user="print_pan", password="print@!9@8",
+                               host="printpanindia.com", cursorclass=MySQLdb.cursors.DictCursor)
 
     return g.db
 
