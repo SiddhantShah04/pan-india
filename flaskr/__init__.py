@@ -24,6 +24,7 @@ def create_app(test_config=None):
 
     api = Api(app, version='1.0', title='Sample API',
               description='A sample API')
+    print("HE")
 
     @api.route('/')
     class HelloWorld(Resource):
