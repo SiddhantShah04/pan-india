@@ -115,22 +115,22 @@ class Signup(Resource):
             formData = api.payload
             name = formData['name']
             password = formData['password']
-            # otp = formData['otp']
+            otp = formData['otp']
 
             email = formData['email']
             phone = str(formData['phone'])
             companyName = str(formData['companyName'])
-            # if(len(phone) != 10):
-            #     return({"status": False, "information": "Invalid phone number'", "error_code": "401", "error_message": "Invalid phone number"}, 401)
-            # if(checkEmail(email)):
-            #     return({"status": False, "information": "Invalid email.'", "error_code": "401", "error_message": "Invalid email."}, 401)
+            if(len(phone) != 10):
+                return({"status": False, "information": "Invalid phone number'", "error_code": "401", "error_message": "Invalid phone number"}, 401)
+            if(checkEmail(email)):
+                return({"status": False, "information": "Invalid email.'", "error_code": "401", "error_message": "Invalid email."}, 401)
 
-            # if(session.get('otp') == None or otp != session['otp'] or int(time()) > session["setTimeOut"]+300000):
+            if(session.get('otp') == None or otp != session['otp'] or int(time()) > session["setTimeOut"]+300000):
 
-            #     return({"status": False, "information": "Invalid OTP.", "error_code": "400", "error_message": "Invalid OTP."}, 400)
-            # session.pop('otp')
-            # session.pop('setTimeOut')
-            print(">>>>>>>>>>>>>>>>>>")
+                return({"status": False, "information": "Invalid OTP.", "error_code": "400", "error_message": "Invalid OTP."}, 400)
+            session.pop('otp')
+            session.pop('setTimeOut')
+
             error = None
             sql = "SELECT * FROM users WHERE email=%s"
             data = (email,)

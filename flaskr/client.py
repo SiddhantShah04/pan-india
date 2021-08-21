@@ -187,19 +187,18 @@ class ClientDetails(Resource):
             formData = api.payload
             data = {}
             error = False
-            # print(formData)
             for elt in tempArray:
                 if(elt in formData.keys()):
                     data[elt] = formData[elt]
                 else:
                     data[elt] = None
-                    # error = True
-            # print(data)
+                    error = True
             data2 = {}
             data2["clientId"] = str(uuid.uuid4())
             data2["companyName"] = formData["companyDetails"]["companyName"] if formData["companyDetails"]["companyName"] else None
             data2["createdBy"] = ""
-            data2["information"] = "information"
+            data2["information"] = data["information"]
+
             if(error):
                 data["status"] = False
                 data2["status"] = 2
@@ -208,7 +207,6 @@ class ClientDetails(Resource):
             else:
                 data2["status"] = 0
                 data["status"] = True
-            print(data2)
 
             sql = "INSERT INTO clientConfiguration(clientId,companyName,createdBy,information,status) VALUES (%s,%s,%s,%s,%s)"
             cur.execute(sql, tuple(data2.values()))
@@ -217,7 +215,7 @@ class ClientDetails(Resource):
             sql = "INSERT INTO clientDetails(companyDetails,procurements,admin,accounts,specification,packingCourierDetails,packingTeam,packingCourier,billing,settings,information,vendor,status,clientId) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
             cur.execute(sql, tuple(data.values()))
 
-            # db.commit()
+            db.commit()
             if(error):
                 return({'status': data["status"], 'error_code': 400, 'error_message': f"{[key for (key,value) in data.items() if value == None ]} Not found"}, 400)
 

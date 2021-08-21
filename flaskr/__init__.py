@@ -21,15 +21,22 @@ def create_app(test_config=None):
     # app.config['SERVER_NAME'] = "xyz.localhost:5000"
     app.config['SESSION_PERMANENT'] = True
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=1400)
-    CORS(app, resources={r"/api/*": {"origins": "*"}})
+    cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
+
+    app.config['MAIL_SERVER'] = environ.get("MAIL_SERVER")
+    app.config['MAIL_PORT'] = environ.get("MAIL_PORT")
+    app.config['MAIL_USERNAME'] = environ.get("MAIL_USERNAME")
+    app.config['MAIL_PASSWORD'] = environ.get("MAIL_PASSWORD")
+    app.config['MAIL_USE_TLS'] = environ.get("MAIL_USE_TLS")
+    app.config['MAIL_USE_SSL'] = environ.get("MAIL_USE_SSL")
+
+    # @app.before_request
+    # def before_request():
+    #     client = request.host.split('.')
+    #     app.config['SERVER_NAME'] = f"{client[0]}.localhost:5000"
 
     api = Api(app, version='1.0', title='Sample API',
               description='A sample API')
-
-    @api.route('/')
-    class HelloWorld(Resource):
-        def get(self):
-            return("ghj")
 
     from . import auth
     api.add_namespace(auth.api)
@@ -48,6 +55,4 @@ def create_app(test_config=None):
 
     from . import product
     api.add_namespace(product.api)
-    return app
-
     return app
