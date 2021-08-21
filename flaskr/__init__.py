@@ -24,11 +24,29 @@ def create_app(test_config=None):
 
     api = Api(app, version='1.0', title='Sample API',
               description='A sample API')
-    print("HE")
 
     @api.route('/')
     class HelloWorld(Resource):
         def get(self):
             return("ghj")
+
+    from . import auth
+    api.add_namespace(auth.api)
+
+    from . import client
+    api.add_namespace(client.api)
+
+    from . import image
+    api.add_namespace(image.api)
+
+    from . import users
+    api.add_namespace(users.api)
+
+    from . import order
+    api.add_namespace(order.api)
+
+    from . import product
+    api.add_namespace(product.api)
+    return app
 
     return app
