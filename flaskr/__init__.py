@@ -20,7 +20,7 @@ def create_app(test_config=None):
     # app.config['SERVER_NAME'] = "xyz.localhost:5000"
     app.config['SESSION_PERMANENT'] = True
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=1400)
-    # cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
+    CORS(app, resources={r"/api/*": {"origins": "*"}})
 
     api = Api(app, version='1.0', title='Sample API',
               description='A sample API')
