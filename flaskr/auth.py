@@ -1,23 +1,39 @@
+from logging import log
 from flask_restx import Namespace, Resource, fields, abort
 from flask import session
 from flaskr.db import get_db
 from . import activityLog
 from werkzeug.security import check_password_hash, generate_password_hash
 import re
+from flaskr.util.sendOtp import sendMessgae
+from random import randint
+from time import time
 api = Namespace('auth', description='Apis for Pan Print India')
 
 login = api.model('Login', {
     'email': fields.String(required=True, description='username', example="siddhantshah04@gmail.com"),
-    'phone': fields.Integer(required=True, description='Phone number', example=1236547890),
+    'phone': fields.Integer(required=True, description='Phone number', example=8828286463),
     'password': fields.String(required=True, description='password'),
 })
 
-signup = api.model('Auth', {
+signup = api.model('signup', {
     'email': fields.String(required=True, example="siddhantshah04@gmail.com"),
-    'phone': fields.Integer(required=True, description='Phone number', example=1236547890),
+    'phone': fields.Integer(required=True, description='Phone number', example=8828286463),
     'password': fields.String(required=True, description='password'),
     'name': fields.String(required=True, description='Name'),
     'companyName': fields.String(required=True, description='Company Name'),
+    'otp': fields.Integer(required=True, description='OTP', min=6),
+
+})
+
+ChangePassword = api.model('ChangePassword', {
+    'currentPassword': fields.String(required=True,  description='password'),
+    'newPassword': fields.String(required=True,  description='password'),
+    'confirmPassword': fields.String(required=True, description='password'),
+})
+SendOtp = api.model('SendOtp', {
+    'phone': fields.Integer(required=True, description='Phone number', example=8828286463),
+
 })
 
 
@@ -53,7 +69,6 @@ class Login(Resource):
             cur.execute(sql, data)
 
             user = cur.fetchone()
-            print(user)
             error = None
             if user is None:
 
@@ -71,8 +86,6 @@ class Login(Resource):
 
         except Exception as e:
             return({"status": False, "information": str(e), "error_code": "500", "error_message": "internal server error"}, 500)
-        finally:
-            cur.close()
 
 
 @api.route('/logout')
@@ -102,16 +115,23 @@ class Signup(Resource):
             formData = api.payload
             name = formData['name']
             password = formData['password']
+            # otp = formData['otp']
+
             email = formData['email']
             phone = str(formData['phone'])
             companyName = str(formData['companyName'])
-            if(len(phone) != 10):
-                return({"status": False, "information": "Invalid phone number'", "error_code": "401", "error_message": "Invalid phone number"}, 401)
-            if(checkEmail(email)):
-                return({"status": False, "information": "Invalid email.'", "error_code": "401", "error_message": "Invalid email."}, 401)
+            # if(len(phone) != 10):
+            #     return({"status": False, "information": "Invalid phone number'", "error_code": "401", "error_message": "Invalid phone number"}, 401)
+            # if(checkEmail(email)):
+            #     return({"status": False, "information": "Invalid email.'", "error_code": "401", "error_message": "Invalid email."}, 401)
 
+            # if(session.get('otp') == None or otp != session['otp'] or int(time()) > session["setTimeOut"]+300000):
+
+            #     return({"status": False, "information": "Invalid OTP.", "error_code": "400", "error_message": "Invalid OTP."}, 400)
+            # session.pop('otp')
+            # session.pop('setTimeOut')
+            print(">>>>>>>>>>>>>>>>>>")
             error = None
-
             sql = "SELECT * FROM users WHERE email=%s"
             data = (email,)
             cur.execute(sql, data)
@@ -144,24 +164,69 @@ class Signup(Resource):
             cur.close()
 
 
-# Registers a function that runs before the view function, no matter what URL is requested.
+@api.route('/sendOtp')
+@api.response(404, 'Url not found')
+class SendOtp(Resource):
+    @api.doc('sendOtp')
+    @api.expect(SendOtp)
+    def post(self):
+        try:
+            db = get_db()
+            cur = db.cursor()
 
-# {
-#   "email": "siddhant044@gmail.com",
-#   "phone": 0,
-#   "password": "string",
-#   "name": "string"
-# }
+            formData = api.payload
+            phone = str(formData['phone'])
+
+            if(len(phone) != 10):
+
+                return({"status": False, "information": "Invalid phone number.", "error_code": "401", "error_message": "Invalid phone number"}, 401)
+            otp = randint(100000, 999999)
+            session['otp'] = otp
+            session["setTimeOut"] = int(time())
+            message = f"{otp} is your Print Pan India Verification code. Valid for 5 minutes."
+            phone = "+91"+phone
+            resp = sendMessgae(phone, message)
+
+            return({"status": True, "information": "Otp send sucessfully.", "error_code": "", "error_message": ""}, 201)
+
+        except Exception as e:
+            return({"status": False, "information": str(e), "error_code": "500", "error_message": "internal server error"}, 500)
+
+        finally:
+            cur.close()
 
 
-# @api.before_app_request
-# def load_logged_in_user():
-#     user_id = session.get('user_id')
+@api.route("/changePassword")
+@api.response(200, "password has been changes")
+class ChangePassword(Resource):
+    @api.doc('Change password')
+    @api.expect(ChangePassword)
+    def patch(self):
+        '''Change password'''
+        try:
+            db = get_db()
+            cur = db.cursor()
+            if 'user_id' in session:
+                formData = api.payload
 
-#     if(user_id is None):
-#         g.user = None
-#     else:
-#         g.user = get_db().execute('SELECT * FROM user WHERE id = ?', (user_id,)).fetchone()
+                password = formData['currentPassword']
+                newPassword = formData['newPassword']
+                confirmPassword = formData['confirmPassword']
+                if(newPassword != confirmPassword):
+                    return({"status": False, "information": "current and new password are not same.", "error_code": "400", "error_message": "current and new password are not same."}, 400)
+
+                sql = "UPDATE users SET password=(%s) WHERE id =(%s)"
+                data = (str(generate_password_hash(password)),
+                        str(session['user_id']))
+                cur.execute(sql, data)
+                db.commit()
+                return({"status": True, "information": "User password sucessfully changed.", "error_code": "", "error_message": ""}, 201)
+
+        except Exception as e:
+            return({"status": False, "information": str(e), "error_code": "500", "error_message": "internal server error"}, 500)
+
+        finally:
+            cur.close()
 
 
 def login_required(view):

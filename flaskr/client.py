@@ -3,9 +3,11 @@ from flask import session
 from flaskr.db import get_db
 import json
 import uuid
-import re
+
 import ast
 from . import activityLog
+from flaskr import create_app
+from flask_mail import Mail, Message
 api = Namespace('newClientRegistration', description='Client data')
 
 #   'companyDetails': fields.List(fields.Nested(api.model('TheModel', {'a': fields.String}))),
@@ -115,6 +117,11 @@ clientDetails = api.model('Client Data', {
     'information': fields.String(required=True, description=''),
 
     'errorMessage': fields.String(required=True, description=''),
+    'vendor': fields.Nested(api.model('vendor', {
+        'email': fields.String(required=True, example="siddhantshah04@gmail.com"),
+        'phone': fields.String(required=True, example="8828286463"),
+
+    }))
 })
 
 updateClientDetails = api.model('updateClientDetails', {
@@ -122,14 +129,13 @@ updateClientDetails = api.model('updateClientDetails', {
     'itemsToUpdate': fields.List(fields.Nested(api.model('item', {'column Name': fields.String}))),
 
 })
+# f5ff1719-7dc5-4be8-bcd0-f071b449
+tempArray = ['companyDetails', 'procurements', 'admin', 'accounts', 'specification', 'packingCourierDetails', 'packingTeam',
+             'packingCourier', 'billing', 'settings', 'information', "vendor"]
 
-
-def checkEmail(email):
-    regex = '^(\w|\.|\_|\-)+[@](\w|\_|\-|\.)+[.]\w{2,3}$'
-    if(True):
-        return(False)
-    else:
-        return(True)
+statusUpdate = api.model('statusUpdate', {
+    'status': fields.Integer(required=True, description=' 0 - Proper data, 1 - Active Client, 2 - Wrong Data , 3 - Suspended Client'),
+})
 
 
 # newclientRegistation
@@ -138,31 +144,24 @@ class ClientDetails(Resource):
 
     # @api.marshal_with(clientDetails, code=201, description='Client data added')
     def get(self):
-
         try:
             db = get_db()
-
             cur = db.cursor()
-
-            formData = api.payload
             if 'user_id' in session:
 
-                sql = "select clientId from users where id = %s"
-                data = (session['user_id'],)
-
+                # json.dumps(users )
+                sql = "SELECT * FROM users WHERE id=%s"
+                data = (str(session['user_id']),)
                 cur.execute(sql, data)
-                # json.dumps(users)
-                user = cur.fetchone()
-
+                userData = cur.fetchone()
                 sql = "SELECT * FROM clientDetails WHERE clientId=%s"
-
-                data = (str(user['clientId']),)
+                data = (str(userData['clientId']),)
                 cur.execute(sql, data)
                 clientData = cur.fetchone()
-
+                print(clientData)
                 # Array contains data in dict
                 tempData = ['companyDetails', 'procurements', 'admin', 'accounts', 'specification', 'packingCourierDetails', 'packingTeam',
-                            'billing', 'settings', ]
+                            'billing', 'settings']
                 for key in clientData.keys():
                     if(key in tempData):
                         clientData[key] = ast.literal_eval(clientData[key])
@@ -170,7 +169,6 @@ class ClientDetails(Resource):
                         clientData[key] = str(clientData[key])
 
                 return({'data': clientData, 'status': True, "information": 'Client details', "error_code": "", "error_message": ""}, 200)
-
             else:
                 return({"status": False, "information": 'Unauthorized access', "error_code": "500", "error_message": "User have to logged in first."}, 500)
         except Exception as e:
@@ -187,67 +185,43 @@ class ClientDetails(Resource):
             db = get_db()
             cur = db.cursor()
             formData = api.payload
-
-            tempArray = ['companyDetails', 'procurements', 'admin', 'accounts', 'specification', 'packingCourierDetails', 'packingTeam',
-                         'packingCourier', 'billing', 'settings', 'information']
             data = {}
-            additionalErrorMessage = []
-            invalidEmail = False
             error = False
+            # print(formData)
             for elt in tempArray:
                 if(elt in formData.keys()):
                     data[elt] = formData[elt]
-
-                    # if( type(formData[elt]) is dict and ("email" in formData[elt].keys() or "headOfficeEmail" in formData[elt].keys() or "companyEmail" in formData[elt].keys() ) ):
-
-                    #     if("email" in formData[elt].keys()):
-                    #         invalidEmail =  True
-                    #         additionalErrorMessage.append("Email")
-                    #         data[elt]["email"] = str(checkEmail(formData[elt].values()) if checkEmail(formData[elt].values()) else None)
-                    #     if("headOfficeEmail" in formData[elt].keys()):
-                    #         invalidEmail =  True
-                    #         additionalErrorMessage.append("Head Office Email")
-                    #         data[elt]["headOfficeEmail"] = checkEmail(formData[elt].values()) if checkEmail(formData[elt].values()) else None
-                    #     if("companyEmail" in formData[elt].keys()):
-                    #         invalidEmail =  True
-                    #         additionalErrorMessage.append("Company Email")
-                    #         data[elt]["companyEmail"] = checkEmail(formData[elt].values()) if checkEmail(formData[elt].values()) else None
-
                 else:
                     data[elt] = None
-                    error = True
-
+                    # error = True
+            # print(data)
             data2 = {}
             data2["clientId"] = str(uuid.uuid4())
             data2["companyName"] = formData["companyDetails"]["companyName"] if formData["companyDetails"]["companyName"] else None
             data2["createdBy"] = ""
-            data2["information"] = data["information"]
-
+            data2["information"] = "information"
             if(error):
                 data["status"] = False
+                data2["status"] = 2
                 data["error"] = f"{[key for (key,value) in data.items() if value == None ]} Not found"
 
             else:
+                data2["status"] = 0
                 data["status"] = True
+            print(data2)
 
-            sql = "INSERT INTO clientConfiguration(clientId,companyName,createdBy,information) VALUES (%s,%s,%s,%s)"
+            sql = "INSERT INTO clientConfiguration(clientId,companyName,createdBy,information,status) VALUES (%s,%s,%s,%s,%s)"
             cur.execute(sql, tuple(data2.values()))
             data["clientId"] = data2["clientId"]
 
-            sql = "INSERT INTO clientDetails(companyDetails,procurements,admin,accounts,specification,packingCourierDetails,packingTeam,packingCourier,billing,settings,information,status,clientId) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-
+            sql = "INSERT INTO clientDetails(companyDetails,procurements,admin,accounts,specification,packingCourierDetails,packingTeam,packingCourier,billing,settings,information,vendor,status,clientId) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
             cur.execute(sql, tuple(data.values()))
 
-            db.commit()
-            # if(invalidEmail):
-            #     return({'status':False,'error_code':400,'error_message' :   f"{[x for x in additionalErrorMessage]} is invalid" },400 )
+            # db.commit()
             if(error):
                 return({'status': data["status"], 'error_code': 400, 'error_message': f"{[key for (key,value) in data.items() if value == None ]} Not found"}, 400)
 
-            activityLog.activity(0, "Client", f" With client Id " +
-                                 data2["clientId"] + "registered", "clientConfiguration and clientDetails")
-
-            return({"status": True, "information": "The Client has been registered", "error_code": "", "error_message": ""}, 201)
+            return({"status": True, "information": "The data has been recorded soon a support person will contact you", "error_code": "", "error_message": ""}, 201)
 
         except Exception as e:
             return({"status": False, "information": str(e), "error_code": "500", "error_message": "internal server error"}, 500)
@@ -255,66 +229,93 @@ class ClientDetails(Resource):
         finally:
             cur.close()
 
-    # @api.route('/id')
-    # @api.doc(params={'id': 'An ID'})
-    # def get(id):
-    #     print(id)
 
-    @ api.expect(updateClientDetails)
-    def patch(self):
-
+@api.route("/<int:id>")
+@api.doc(params={'id': 'Enter Client ID'})
+class EditClient(Resource):
+    @api.expect(clientDetails)
+    def patch(self, id):
         try:
             db = get_db()
             cur = db.cursor()
             formData = api.payload
-            print(formData['clientId'])
-            for elt in formData['itemsToUpdate']:
-                for key, value in elt.items():
+            user_id = session.get('user_id')
+            data = {}
+            error = False
 
-                    data = f"{key} = (%s)"
-                    sql2 = "update clientDetails set " + \
-                        data+" where clientId = (%s)"
-                    cur.execute(
-                        sql2, (value, str(formData['clientId'])))
-                    if(key == "companyDetails"):
-                        newValue = ast.literal_eval(value)
-                        sql2 = "update clientConfiguration set companyName=(%s) where clientId = (%s)"
-                        cur.execute(
-                            sql2, (newValue["companyName"], formData['clientId']))
-            db.commit()
+            if(user_id):
 
-            # user_id = session['user_id']
-            # tempData = ["status", "isActive"]
-            # print(formData)
+                for elt in tempArray:
+                    if(elt in formData.keys()):
+                        data[elt] = formData[elt]
 
-            # status = "status"
-            # formValue = tuple(f"{status} = (%s)")
+                    else:
+                        data[elt] = None
+                        error = True
 
-            # sql = "update clientDetails set status = (%s) where ID = (%s)"
-            # sql2 = "update clientDetails set "+ formValue+" where ID = (%s)"
+                companyName = formData["companyDetails"]["companyName"] if formData["companyDetails"]["companyName"] else None
+                print(companyName)
+                sql = "Update  clientConfiguration  set companyName=%s,createdBy=%s,information=%s where id=%s"
+                cur.execute(sql, (
+                    companyName, "", formData["information"], id))
 
-            # print(sql,sql2)
-            # cur.execute(sql2,("1",4))
-            # # db.commit()
+                if(error):
+                    data["status"] = False
+                    data["error"] = f"{[key for (key,value) in data.items() if value == None ]} Not found"
+                else:
+                    data["status"] = True
+                db.commit()
 
-            return({"status": True, "information": "The Client data has been updated", "error_code": "", "error_message": ""}, 201)
-
+                return({"status": True, "information": "The Client details has been updated.", "error_code": "", "error_message": ""}, 201)
         except Exception as e:
             return({"status": False, "information": str(e), "error_code": "500", "error_message": "internal server error"}, 500)
 
         finally:
             cur.close()
 
-        # @app.route('/search/<param1>/<param2>/<param3>')
-            # def get(param1, param2, param3):
-            #     cur = mysql.connect().cursor()
-            #     cur.execute('''select * from maindb.maintable where field1 = %s and field2 = %s and field3 = %s''',
-            #                 (param1, param2, param3))
-            #     r = [dict((cur.description[i][0], value)
-            #          for i, value in enumerate(row)) for row in cur.fetchall()]
-            #     return jsonify({'results': r})python3 -m flask run
 
+@api.route("/statusUpdate/<string:id>")
+@api.doc(params={'id': 'Enter Client ID'})
+class StatusUpdate(Resource):
+    @api.expect(statusUpdate)
+    def patch(self, id):
+        try:
+            db = get_db()
+            cur = db.cursor()
+            formData = api.payload
+            sql = "select * from users where clientId=%s"
+            data = (id,)
+            cur.execute(sql, data)
+            userData = cur.fetchone()
 
-# @api.route('/<int:id>')
-# class GetClientData(Resource):
-#     @api.doc(params={'id': 'An ID'})
+            sql = "Update  clientConfiguration  set status=%s where clientId=%s"
+            cur.execute(sql, (formData["status"], id))
+
+            db.commit()
+            # sendStatusChangeMail(create_app())
+
+            message = f"""
+    
+            <h1>Hello, </h1>
+            <br/>
+                Your status has been changed. 
+                
+            """
+
+            mail = Mail(create_app())
+            sender = "siddhantshah044@gmail.com"
+            receiver = userData["email"]
+            msg = Message(subject="message", sender=sender,
+                          recipients=[receiver])
+            msg.html = message
+
+            mail.send(msg)
+
+            return({"status": True, "information": "The Client status has been updated.", "error_code": "", "error_message": ""}, 201)
+
+        except Exception as e:
+            return({"status": False, "information": str(e), "error_code": "500", "error_message": "internal server error"}, 500)
+
+        finally:
+            pass
+            cur.close()
