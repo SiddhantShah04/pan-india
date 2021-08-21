@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "printpanindia",
+  "private_key_id": "a98c14ea9403d657043b2d3047f98ac8d1eed5d2",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCl3sncWFt4eb+e\nI8whC3Xk3rUgCoookT66s8jXQEOqPzD2oXMc6eRu9NtP3EnatBM+7BnDvAhXNDcf\nYCL5fsws8DH+AcmWtHUxWDx4bA6nY5mYVOnIPGrZbipKk2Oa5q4Vcji3oKTBZVRV\nUghW1cBGZ6K2v21VypNaobrnBw5QivS3LVq4NesguCwLzyCf2XI9qXaIsRDsWBKS\nN1LFBUTFOxHMeZ+LJiOueNgNSexmnyHefvcfuzKh3QhyUpbYVE6tL81weuA65xdu\nIAjT32ENz1c6bavFtaXEpVGF4zUQWwoYbHqgrbRnY9FxVsJr9bR/PFCg9B1TzPgx\nhs733mPzAgMBAAECggEAI2pbPWHcPe/42uIXzqJszK5EjA/UCe9hLmn+ov8Es5AE\ne1RjiLPj41EClp2ZY0n5pgCxS5qVSVFLx7Y2IYFSRPIQKoTlLvle4GdPmgKwaksY\n226d7/P+eGhOPVgU91jzqH6X35U8OFLTW9hFEY1YHXA5TL24sY2sQriveG6IPufk\nbbHmODvBiFnq/exD2VF9ZMHeUxNtEmDsr+gpxEyGuph0pVA8U1xlawWkk5HeeO/I\nlQO2mk7kYDcP9s+gZtaWrnGlSV87ZX42FKdAzkdTbzyy/QMUFeWUGSepqb3I4+YB\n7Tcj2jxJWgapL1e90IOUWUV/NQzx//JNR7e9h+Ue0QKBgQDSrHlNyZE1Flqsaxhl\niErJ1iPz4xbpajKATic2470Vs5D1kWPbNT/E3iNVjdRQMU76DhIl0Qx8EGM1nwCT\nAkFrkgWRqWHmbNzuqC+gudZXbmV6nrSYNDLUSw1IZ5iEOfowPYuN83Z5QFARpYDM\nKj1mQjN8X6eX04W2SwjY5q4g2wKBgQDJjp8fbQZWNcVMHMQ8kod0dfONbG9u4VXC\nQaHoGNs8ybUZ3/9AqBEz4uulDZDVCSBXcHs9r4tySjWZRau19vyFdEFFi/7kPX/I\n5G42RmqN8Gu0lZx60zbI76euWaHRUQwYFwyX1iOI+Sgk5ME2ct77xJV9U3/fzncO\nyL6E64tIyQKBgQDG5UCM2P03YohueZmJ2ffJwFsnGUF7UuCk06QgJThR8bqsrPva\na9Ztlc9EKWfF4heO6pPlkgy4YHxZlmjjYeDDnxOU5pZgBm07ABwfIPQkjTxPXOBh\nRf6rAMRklDGgvF/hBWnotW8noDk3v8nudv6KuXuEM4a1R2TYqtSKepbwuwKBgHV1\nV+XIc1jqHQAuA24JNkb4NebEumuzhXafKOtJEPpr0c4ya14Sk3PZWdnl/fEoUGCk\nfC2Gj40bEgEwSNDSDnb3ONJ+sxvvevhnppKalp4A7cNfLMGnNNYEU4OXWGXTBWlE\nhWI2uJ6qFGrrpG1GpAu0lClk77BNcbR76Ast+Q2BAoGBAKgv05OimfCMQZKfDx5z\nyGWczMwksVP4Cs8hDO2LbNoQQLltgdFqnuSp5Lkgjl+U2vNxQ51hkJIp1RqrtKpd\n4cIksoI+ggGKWTcjK8XgP7RtRTeAS1pTYZZNWE4FW8KJY11Shehpr2U2G9FeIseL\nrl74u8/+V8/kR0hQfkK9igzR\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-bnkeq@printpanindia.iam.gserviceaccount.com",
+  "client_id": "104670757328277728443",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-bnkeq%40printpanindia.iam.gserviceaccount.com"
+}
