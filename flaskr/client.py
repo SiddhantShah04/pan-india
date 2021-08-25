@@ -82,8 +82,8 @@ clientDetails = api.model('Client Data', {
         })
     ),
     'packingCourier': fields.String(required=True, description=''),
-    'billing': fields.Nested(
-        api.model('billing', {
+    'billingAndPaymentTerms': fields.Nested(
+        api.model('billingAndPaymentTerms', {
             'billing': fields.String(required=True),
             'billingReq': fields.String(required=True),
             'billingCycle': fields.Integer(required=True),
@@ -92,8 +92,8 @@ clientDetails = api.model('Client Data', {
             'billingAddressBranch': fields.Integer(required=True),
         })
     ),
-    'settings': fields.Nested(
-        api.model('setting', {
+    'applicationSettingData': fields.Nested(
+        api.model('applicationSettingData', {
             'autoInvoice': fields.String(required=True),
             'payOnAccount': fields.String(required=True),
             'salesAgentName': fields.String(required=True),
@@ -131,7 +131,7 @@ updateClientDetails = api.model('updateClientDetails', {
 })
 # f5ff1719-7dc5-4be8-bcd0-f071b449
 tempArray = ['companyDetails', 'procurements', 'admin', 'accounts', 'specification', 'packingCourierDetails', 'packingTeam',
-             'packingCourier', 'billing', 'settings', 'information', "vendor"]
+             'packingCourierDetails', 'billingAndPaymentTerms', 'applicationSettingData', 'information', "vendor"]
 
 statusUpdate = api.model('statusUpdate', {
     'status': fields.Integer(required=True, description=' 0 - Proper data, 1 - Active Client, 2 - Wrong Data , 3 - Suspended Client'),
@@ -161,7 +161,7 @@ class ClientDetails(Resource):
                 print(clientData)
                 # Array contains data in dict
                 tempData = ['companyDetails', 'procurements', 'admin', 'accounts', 'specification', 'packingCourierDetails', 'packingTeam',
-                            'billing', 'settings']
+                            'billingAndPaymentTerms', 'settings']
                 for key in clientData.keys():
                     if(key in tempData):
                         clientData[key] = ast.literal_eval(clientData[key])
@@ -192,30 +192,36 @@ class ClientDetails(Resource):
                     data[elt] = formData[elt]
                 else:
                     data[elt] = None
-                    error = True
+                    error = False
             data2 = {}
             data2["clientId"] = str(uuid.uuid4())
             data2["companyName"] = formData["companyDetails"]["companyName"] if formData["companyDetails"]["companyName"] else None
             data2["createdBy"] = ""
-            data2["information"] = data["information"]
+            data2["information"] = "information"
+            data2["status"] = 2
+            # if(error):
+            #     data["status"] = False
+            #     data2["status"] = 2
+            #     data["error"] = f"{[key for (key,value) in data.items() if value == None ]} Not found"
 
-            if(error):
-                data["status"] = False
-                data2["status"] = 2
-                data["error"] = f"{[key for (key,value) in data.items() if value == None ]} Not found"
-
-            else:
-                data2["status"] = 0
-                data["status"] = True
+            # else:
+            #     data2["status"] = 0
+            #     data["status"] = True
 
             sql = "INSERT INTO clientConfiguration(clientId,companyName,createdBy,information,status) VALUES (%s,%s,%s,%s,%s)"
             cur.execute(sql, tuple(data2.values()))
+            data["vendor"] = {}
+            # data["packingCourier"] = {}
+            data["status"] = 1
+            data["information"] = {}
+            # print(data)
             data["clientId"] = data2["clientId"]
 
-            sql = "INSERT INTO clientDetails(companyDetails,procurements,admin,accounts,specification,packingCourierDetails,packingTeam,packingCourier,billing,settings,information,vendor,status,clientId) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+            #!packingCourier settings
+            sql = "INSERT INTO clientDetails(companyDetails,procurements,admin,accounts,specification,packingCourierDetails,packingTeam,billingAndPaymentTerms,applicationSettingData,information,vendor,status,clientId) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
             cur.execute(sql, tuple(data.values()))
-
             db.commit()
+
             if(error):
                 return({'status': data["status"], 'error_code': 400, 'error_message': f"{[key for (key,value) in data.items() if value == None ]} Not found"}, 400)
 

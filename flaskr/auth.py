@@ -115,7 +115,7 @@ class Signup(Resource):
             formData = api.payload
             name = formData['name']
             password = formData['password']
-            otp = formData['otp']
+            # otp = formData['otp']
 
             email = formData['email']
             phone = str(formData['phone'])
@@ -125,11 +125,11 @@ class Signup(Resource):
             if(checkEmail(email)):
                 return({"status": False, "information": "Invalid email.'", "error_code": "401", "error_message": "Invalid email."}, 401)
 
-            if(session.get('otp') == None or otp != session['otp'] or int(time()) > session["setTimeOut"]+300000):
+            # if(session.get('otp') == None or otp != session['otp'] or int(time()) > session["setTimeOut"]+300000):
 
-                return({"status": False, "information": "Invalid OTP.", "error_code": "400", "error_message": "Invalid OTP."}, 400)
-            session.pop('otp')
-            session.pop('setTimeOut')
+                # return({"status": False, "information": "Invalid OTP.", "error_code": "400", "error_message": "Invalid OTP."}, 400)
+            # session.pop('otp')
+            # session.pop('setTimeOut')
 
             error = None
             sql = "SELECT * FROM users WHERE email=%s"
@@ -140,17 +140,19 @@ class Signup(Resource):
                 return({"status": False, "information": "User is already exists.", "error_code": "500", "error_message": "User is already exists."}, 401)
 
             else:
+
                 sql = "SELECT * FROM clientConfiguration WHERE companyName=%s"
                 data = (companyName,)
                 cur.execute(sql, data)
                 clientDetails = cur.fetchone()
-                if(clientDetails):
 
+                if(clientDetails):
+                    print(phone)
                     cur.execute("INSERT INTO users(companyName,email,name,password,phone,clientId) VALUES (%s,%s,%s,%s,%s,%s)", (
                         companyName, email, name, generate_password_hash(str(password)), phone, clientDetails['clientId']))
 
-                    activityLog.activity(
-                        0, "user", f"user With id {email} account  created.", "signup")
+                    # activityLog.activity(
+                    #     0, "user", f"user With id {email} account  created.", "signup")
                     db.commit()
                 else:
                     return({"status": False, "information": "Company name does not exists.", "error_code": "500", "error_message": "Company name does not exists."}, 401)
