@@ -13,11 +13,10 @@ app = firebase_admin.initialize_app(cred, {
 }, name='storage')
 
 
-def getUrl(user_id, file, name):
+def getUrl(user_id, file, name, side):
 
     path_local = file
-    path_on_cloud = f"{user_id}/images/{name}"
-
+    path_on_cloud = f"{user_id}/images/{side}/{name}"
     bucket = storage.bucket(app=app)
 
     # upload file
